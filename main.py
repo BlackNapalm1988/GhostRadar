@@ -36,7 +36,7 @@ def main():
     buffer_max_length = 25
     
     # 3 appears to be the best, however, it does produce quite a bit of words. This may be resolved if more sensors are added to boost complexity.
-    word_min_length = 3 
+    word_min_length = 5 
     
     # Run this once only during the intial boot and during reset
     setup() 

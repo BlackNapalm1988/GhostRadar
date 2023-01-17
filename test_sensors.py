@@ -12,7 +12,7 @@ def test_data():
     def humidity_sensor():
         return randint(20, 90) # DHT11 Sensor, Serial Connection, 20 to 90 Percent Range
         
-    def pressure_sensor():
+    def random_sensor():
         return randint(-100, 100)
     
-    return temp_sensor() + humidity_sensor() + pressure_sensor()
+    return temp_sensor() + humidity_sensor() + random_sensor()
