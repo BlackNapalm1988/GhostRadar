@@ -1,4 +1,3 @@
-#include <Wire.h>
 #include "drawMenus.h"
 
 void setup() {
@@ -13,6 +12,8 @@ void setup() {
   // Intitalize the screen, sensors, etc.
   tft.init();
   dht.begin();
+  //Wire.begin(I2C_SDA, I2C_SCL);
+  setupMPUSensor();
   
   // Fix the screen resolution and clear it.
   tft.setRotation(2);
@@ -23,6 +24,8 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   uint16_t x = 0, y = 0;
+  //findI2C();
+  getNewMPUData();
 
   bool isBootScreen = true;
   bool isMenuActive = false;
