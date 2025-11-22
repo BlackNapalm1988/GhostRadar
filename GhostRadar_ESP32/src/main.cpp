@@ -22,32 +22,35 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  static bool isBootScreen = true;
+  static bool isMenuActive = false;
+
   uint16_t x = 0, y = 0;
-
-  bool isBootScreen = true;
-  bool isMenuActive = false;
-
   bool pressed = tft.getTouch(&x, &y);
 
-  if (!pressed && isBootScreen) {
+  if (isBootScreen) {
+    // Show the splash screen until the user taps the display once.
     drawSplashScreen();
-    pressed = tft.getTouch(&x, &y);
+    if (pressed) {
+      isBootScreen = false;
+      tft.fillScreen(TFT_BLACK);
+    }
+    return;
   }
-  else if (pressed && !isMenuActive) {
+
+  if (pressed && !isMenuActive) {
     isMenuActive = true;
     tft.fillScreen(TFT_BLACK);
-    
-    while (isMenuActive) {
-      drawMenuScreen();
-      delay(10);
-
-      tft.setTextSize(2);
-      tft.drawNumber(getTemperature(), 60, 170);
-      tft.drawNumber(getHumidity(), 165, 170);
-      tft.drawNumber(x, 165, 140);
-      tft.drawNumber(y, 60, 140);
-
-    }
   }
-  
+
+  if (isMenuActive) {
+    drawMenuScreen();
+    delay(10);
+
+    tft.setTextSize(2);
+    tft.drawNumber(getTemperature(), 60, 170);
+    tft.drawNumber(getHumidity(), 165, 170);
+    tft.drawNumber(x, 165, 140);
+    tft.drawNumber(y, 60, 140);
   }
+}
