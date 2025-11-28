@@ -1,56 +1,103 @@
-#include <Wire.h>
-#include "drawMenus.h"
+#include <Arduino.h>
+#include <SPI.h>
+#include "config.h"
+#include "Display.h"
+#include "Sensors.h"
+#include "Dictionary.h"
+#include "WifiRadar.h"
+#include "TouchUI.h"
+#include "Settings.h"
+#include "SDManager.h"
+
+// Create SPI bus objects
+SPIClass hspi(HSPI);  // For SD card (separate bus)
+
+// VSPI pins
+static const int VSPI_SCLK = 18;
+static const int VSPI_MISO = 19;
+static const int VSPI_MOSI = 23;
+// static const int LCD_CS    = 5;
+// static const int TOUCH_CS  = 22;
+
+// HSPI pins
+// static const int HSPI_SCLK = 14;
+// static const int HSPI_MISO = 12;
+// static const int HSPI_MOSI = 13;
+// static const int SD_CS     = 15;
 
 void setup() {
-  // Calibration data Returned from Touch_calibrate.ino
-  uint16_t calData[5] = { 212, 3442, 304, 3431, 1 };
-  tft.setTouch(calData);
-  tft.getSetup(user);
-
-  // Start the serial monitor, debugging only
   Serial.begin(115200);
+  delay(1000);
+  Serial.println();
+  Serial.println(F("=== GhostRadar ESP32 boot ==="));
 
-  // Intitalize the screen, sensors, etc.
-  tft.init();
-  dht.begin();
-  
-  // Fix the screen resolution and clear it.
-  tft.setRotation(2);
-  tft.fillScreen(TFT_BLACK);
+  Settings_loadDefaults();
 
+  // Init UI bus on default VSPI (used by TFT + touch)
+  SPI.begin(VSPI_SCLK, VSPI_MISO, VSPI_MOSI, LCD_CS);
+  pinMode(LCD_CS, OUTPUT);
+  pinMode(TOUCH_CS, OUTPUT);
+  digitalWrite(LCD_CS, HIGH);
+  digitalWrite(TOUCH_CS, HIGH);
+
+  // Init SD bus
+  hspi.begin(HSPI_SCK, HSPI_MISO, HSPI_MOSI, HSPI_CS);
+  pinMode(HSPI_CS, OUTPUT);
+  digitalWrite(HSPI_CS, HIGH);
+
+  SDManager::begin(hspi, HSPI_CS);
+  SDManager::ensureDirectories();
+  SDManager::saveDefaultSystemConfigIfMissing();
+  SDManager::loadSystemConfig();
+
+  // Now init the rest of the system
+  Display_begin();  // we'll adjust this next
+  Display_applyBrightness(Settings_get().brightnessLevel);
+  Display_drawStaticFrame();
+
+  TouchUI_begin();
+  Sensors_begin();
+  Dictionary_begin();
+  WifiRadar_begin();
+  WifiRadar_startTask();
+
+  SDManager::startSessionLog();
+  SDManager::logEvent("Boot complete");
 }
 
+
 void loop() {
-  // put your main code here, to run repeatedly:
-  static bool isBootScreen = true;
-  static bool isMenuActive = false;
-
-  uint16_t x = 0, y = 0;
-  bool pressed = tft.getTouch(&x, &y);
-
-  if (isBootScreen) {
-    // Show the splash screen until the user taps the display once.
-    drawSplashScreen();
-    if (pressed) {
-      isBootScreen = false;
-      tft.fillScreen(TFT_BLACK);
-    }
+  // Touch UI
+  TouchUI_update();
+  UiMode mode = TouchUI_getMode();
+  if (mode == UI_MODE_SETTINGS) {
     return;
   }
 
-  if (pressed && !isMenuActive) {
-    isMenuActive = true;
-    tft.fillScreen(TFT_BLACK);
+  // Sensors -> letter
+  char newLetter = 0;
+  bool gotLetter = Sensors_pollLetter(newLetter);
+  if (gotLetter) {
+    Display_updateStatusBar(Sensors_getLastTempC(), Sensors_getLastHumidity());
+
+    Dictionary_appendLetter(newLetter);
+    String sensorExtra = "temp=" + String(Sensors_getLastTempC(), 1) + ";hum=" + String(Sensors_getLastHumidity(), 1);
+    SDManager::logSessionLine("sensors,letter," + String(newLetter) + "," + sensorExtra);
+
+    String hit;
+    if (Dictionary_checkForWord(hit)) {
+      Display_displayWord(hit);
+      const char* dictName = Dictionary_getActiveName();
+      String dictLabel = dictName ? String(dictName) : String("unknown");
+      SDManager::logSessionLine("dictionary,word," + hit + ",dict=" + dictLabel);
+    }
   }
 
-  if (isMenuActive) {
-    drawMenuScreen();
-    delay(10);
+  // Heartbeat tick each loop; show letter or dash if no letter this cycle.
+  Display_heartbeatStep(gotLetter ? newLetter : 0);
+  // Animate heartbeat strip
+  Display_updateHeartbeat();
 
-    tft.setTextSize(2);
-    tft.drawNumber(getTemperature(), 60, 170);
-    tft.drawNumber(getHumidity(), 165, 170);
-    tft.drawNumber(x, 165, 140);
-    tft.drawNumber(y, 60, 140);
-  }
+  // WiFi radar
+  WifiRadar_draw();
 }
