@@ -1,16 +1,15 @@
-#include <Arduino.h>
-#include <SPI.h>
 #include "BoardConfig.h"
 #include "BoardPins.h"
 #include "Display.h"
-#include "TouchUI.h"
 #include "Sensors.h"
+#include "TouchUI.h"
+#include <Arduino.h>
+#include <SPI.h>
+
 
 static SPIClass sdSpi(HSPI);
 
-const char* Board_getName() {
-  return BOARD_NAME;
-}
+const char *Board_getName() { return BOARD_NAME; }
 
 void Board_initPins() {
   // UI bus for display + touch (VSPI)
@@ -41,5 +40,5 @@ void Board_initSensors() {
   Sensors_configure(pins);
 }
 
-SPIClass& Board_getSdSpi() { return sdSpi; }
+SPIClass &Board_getSdSpi() { return sdSpi; }
 int Board_getSdCsPin() { return HSPI_CS; }

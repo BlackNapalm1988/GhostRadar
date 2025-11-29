@@ -1,14 +1,15 @@
+#include "BoardConfig.h"
+#include "Dictionary.h"
+#include "Display.h"
+#include "SDManager.h"
+#include "Sensors.h"
+#include "Settings.h"
+#include "TouchUI.h"
+#include "WifiRadar.h"
+#include "config_core.h"
 #include <Arduino.h>
 #include <SPI.h>
-#include "BoardConfig.h"
-#include "config_core.h"
-#include "Display.h"
-#include "Sensors.h"
-#include "Dictionary.h"
-#include "WifiRadar.h"
-#include "TouchUI.h"
-#include "Settings.h"
-#include "SDManager.h"
+
 
 void setup() {
   Serial.begin(115200);
@@ -18,7 +19,6 @@ void setup() {
   Serial.println(Board_getName());
 
   Settings_loadDefaults();
-
   Board_initPins();
   Board_initDisplay();
   Board_initTouch();
@@ -44,7 +44,6 @@ void setup() {
   SDManager::logEvent("Boot complete");
 }
 
-
 void loop() {
   // Touch UI
   TouchUI_update();
@@ -60,15 +59,18 @@ void loop() {
     Display_updateStatusBar(Sensors_getLastTempC(), Sensors_getLastHumidity());
 
     Dictionary_appendLetter(newLetter);
-    String sensorExtra = "temp=" + String(Sensors_getLastTempC(), 1) + ";hum=" + String(Sensors_getLastHumidity(), 1);
-    SDManager::logSessionLine("sensors,letter," + String(newLetter) + "," + sensorExtra);
+    String sensorExtra = "temp=" + String(Sensors_getLastTempC(), 1) +
+                         ";hum=" + String(Sensors_getLastHumidity(), 1);
+    SDManager::logSessionLine("sensors,letter," + String(newLetter) + "," +
+                              sensorExtra);
 
     String hit;
     if (Dictionary_checkForWord(hit)) {
       Display_displayWord(hit);
-      const char* dictName = Dictionary_getActiveName();
+      const char *dictName = Dictionary_getActiveName();
       String dictLabel = dictName ? String(dictName) : String("unknown");
-      SDManager::logSessionLine("dictionary,word," + hit + ",dict=" + dictLabel);
+      SDManager::logSessionLine("dictionary,word," + hit +
+                                ",dict=" + dictLabel);
     }
   }
 

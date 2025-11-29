@@ -1,8 +1,8 @@
 #include "Dictionary.h"
-#include "config_core.h"
 #include "Settings.h"
-#include <SPIFFS.h>
+#include "config_core.h"
 #include <FS.h>
+#include <SPIFFS.h>
 #include <vector>
 
 static std::vector<String> dictionary;
@@ -11,35 +11,21 @@ static int letterCount = 0;
 static uint8_t activeDictIndex = 0;
 static bool spiffsMounted = false;
 
-static const char* const DICT_FILES[] = {
-  "/words.txt",
-  "/paranormal.txt",
-  "/short.txt"
-};
+static const char *const DICT_FILES[] = {"/words.txt", "/paranormal.txt",
+                                         "/short.txt"};
 
-static const char* const DICT_NAMES[] = {
-  "Default",
-  "Paranormal",
-  "Short"
-};
+static const char *const DICT_NAMES[] = {"Default", "Paranormal", "Short"};
 
-static const size_t DICT_FILE_COUNT = sizeof(DICT_FILES) / sizeof(DICT_FILES[0]);
+static const size_t DICT_FILE_COUNT =
+    sizeof(DICT_FILES) / sizeof(DICT_FILES[0]);
 
 // small fallback dict
-static const char* FALLBACK_DICT[] = {
-  "HELLO",
-  "GHOST",
-  "SPIRIT",
-  "YES",
-  "NO",
-  "DEMON",
-  "ANGEL",
-  "LIGHT",
-  "DARK",
-  "COLD",
-  "HOT",
+static const char *FALLBACK_DICT[] = {
+    "HELLO", "GHOST", "SPIRIT", "YES",  "NO",  "DEMON",
+    "ANGEL", "LIGHT", "DARK",   "COLD", "HOT",
 };
-static const int FALLBACK_DICT_SIZE = sizeof(FALLBACK_DICT) / sizeof(FALLBACK_DICT[0]);
+static const int FALLBACK_DICT_SIZE =
+    sizeof(FALLBACK_DICT) / sizeof(FALLBACK_DICT[0]);
 
 static void loadFallbackDictionary() {
   dictionary.clear();
@@ -51,9 +37,10 @@ static void loadFallbackDictionary() {
   Serial.println(dictionary.size());
 }
 
-static bool loadDictionaryFromSPIFFS(const char* path) {
+static bool loadDictionaryFromSPIFFS(const char *path) {
   dictionary.clear();
-  dictionary.reserve(512);  // reduce reallocations/fragmentation for moderate dictionaries
+  dictionary.reserve(
+      512); // reduce reallocations/fragmentation for moderate dictionaries
 
   if (!SPIFFS.exists(path)) {
     Serial.print("Dictionary file not found: ");
@@ -74,9 +61,11 @@ static bool loadDictionaryFromSPIFFS(const char* path) {
   while (file.available()) {
     String line = file.readStringUntil('\n');
     line.trim();
-    if (line.length() == 0) continue;
+    if (line.length() == 0)
+      continue;
     line.toUpperCase();
-    if (line.length() > LETTER_BUFFER_SIZE) continue;
+    if (line.length() > LETTER_BUFFER_SIZE)
+      continue;
     dictionary.push_back(line);
   }
   file.close();
@@ -89,7 +78,8 @@ static bool loadDictionaryFromSPIFFS(const char* path) {
 }
 
 bool Dictionary_setActiveIndex(uint8_t idx) {
-  if (DICT_FILE_COUNT == 0) return false;
+  if (DICT_FILE_COUNT == 0)
+    return false;
   uint8_t clamped = Settings_clampDictionaryIndex(idx, DICT_FILE_COUNT - 1);
   activeDictIndex = clamped;
   Settings_get().dictionaryIndex = clamped;
@@ -109,11 +99,13 @@ bool Dictionary_setActiveIndex(uint8_t idx) {
 
 void Dictionary_begin() {
   letterCount = 0;
-  activeDictIndex = Settings_clampDictionaryIndex(Settings_get().dictionaryIndex, DICT_FILE_COUNT - 1);
+  activeDictIndex = Settings_clampDictionaryIndex(
+      Settings_get().dictionaryIndex, DICT_FILE_COUNT - 1);
 
   spiffsMounted = SPIFFS.begin(false);
   if (!spiffsMounted) {
-    Serial.println("SPIFFS mount failed (no auto-format). Using fallback dictionary.");
+    Serial.println(
+        "SPIFFS mount failed (no auto-format). Using fallback dictionary.");
     loadFallbackDictionary();
     Settings_get().dictionaryIndex = 0;
     activeDictIndex = 0;
@@ -145,12 +137,14 @@ void Dictionary_appendLetter(char l) {
 }
 
 bool Dictionary_checkForWord(String &foundWord) {
-  if (letterCount == 0 || dictionary.empty()) return false;
+  if (letterCount == 0 || dictionary.empty())
+    return false;
 
   for (size_t i = 0; i < dictionary.size(); i++) {
     const String &word = dictionary[i];
     int len = word.length();
-    if (len > letterCount) continue;
+    if (len > letterCount)
+      continue;
 
     bool match = true;
     for (int j = 0; j < len; j++) {
@@ -166,7 +160,8 @@ bool Dictionary_checkForWord(String &foundWord) {
       foundWord = word;
 
       int keep = 2;
-      if (keep > letterCount) keep = letterCount;
+      if (keep > letterCount)
+        keep = letterCount;
       char temp[LETTER_BUFFER_SIZE];
       memcpy(temp, letterBuffer + (letterCount - keep), keep);
       memcpy(letterBuffer, temp, keep);
@@ -178,24 +173,20 @@ bool Dictionary_checkForWord(String &foundWord) {
   return false;
 }
 
-void Dictionary_clearBufferAndWord() {
-  letterCount = 0;
-}
+void Dictionary_clearBufferAndWord() { letterCount = 0; }
 
-uint8_t Dictionary_getActiveIndex() {
-  return activeDictIndex;
-}
+uint8_t Dictionary_getActiveIndex() { return activeDictIndex; }
 
-uint8_t Dictionary_getCount() {
-  return (uint8_t)DICT_FILE_COUNT;
-}
+uint8_t Dictionary_getCount() { return (uint8_t)DICT_FILE_COUNT; }
 
-const char* Dictionary_getActiveName() {
+const char *Dictionary_getActiveName() {
   return Dictionary_getNameForIndex(activeDictIndex);
 }
 
-const char* Dictionary_getNameForIndex(uint8_t idx) {
-  if (DICT_FILE_COUNT == 0) return nullptr;
-  if (idx >= DICT_FILE_COUNT) idx = DICT_FILE_COUNT - 1;
+const char *Dictionary_getNameForIndex(uint8_t idx) {
+  if (DICT_FILE_COUNT == 0)
+    return nullptr;
+  if (idx >= DICT_FILE_COUNT)
+    idx = DICT_FILE_COUNT - 1;
   return DICT_NAMES[idx];
 }
