@@ -1,0 +1,61 @@
+# ──────────────────────────────────────────────
+# GhostRadar – Recommended .gitignore
+# Clean multi-board ESP32 firmware repo
+# ──────────────────────────────────────────────
+
+# ----------------------------------------------
+# Visual Studio Code (global project-level only)
+# ----------------------------------------------
+.vscode/*
+!.vscode/codex.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Prevent any .vscode folders inside boards/
+boards/*/.vscode/
+
+# ----------------------------------------------
+# PlatformIO build system
+# ----------------------------------------------
+.pio/
+.pioenvs/
+.piolibdeps/
+.pio/build/
+.pio/libdeps/
+
+# PlatformIO project-level files (auto-generated)
+CMakeFiles/
+cmake-build-debug/
+CMakeCache.txt
+cmake_install.cmake
+
+# ----------------------------------------------
+# Python tools / SD config scripts (optional)
+# ----------------------------------------------
+__pycache__/
+*.pyc
+
+# ----------------------------------------------
+# Logs, temp files, backups
+# ----------------------------------------------
+*.log
+*.tmp
+*.bak
+
+# ----------------------------------------------
+# OS / Editor niceties
+# ----------------------------------------------
+.DS_Store
+Thumbs.db
+
+# ----------------------------------------------
+# Optional: Ignore user-configured dictionaries
+# (Uncomment if dictionary files shouldn't be tracked)
+# shared/data/dictionaries/*
+# !shared/data/dictionaries/default_dictionary.json
+
+# ----------------------------------------------
+# Optional: Ignore user SD-card output folders
+# (If GhostRadar writes logs/config to SD)
+# sd_data/

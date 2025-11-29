@@ -1,0 +1,81 @@
+name: GhostRadar CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  format-and-lint:
+    name: Clang-Format + PlatformIO Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install platformio
+
+      - name: Install clang-format
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format
+
+      - name: Run clang-format check (shared + boards)
+        run: |
+          echo "Running clang-format on tracked C/C++ files..."
+          FILES=$(git ls-files '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hh' '*.hpp' '*.hxx')
+          if [ -z "$FILES" ]; then
+            echo "No C/C++ files found, skipping format check."
+            exit 0
+          fi
+          # Format in-place, then fail if any diff remains
+          clang-format -i $FILES
+          if ! git diff --quiet; then
+            echo "clang-format changed files. Please run clang-format locally and commit the results."
+            git diff --stat
+            exit 1
+          fi
+          echo "clang-format check passed."
+
+      - name: Update PlatformIO platforms and libraries
+        run: |
+          pio update
+
+      - name: Run PlatformIO static analysis (pio check)
+        run: |
+          # Adjust -d / -e as needed if you add more boards/environments
+          pio check -d boards/esp_wroom_32 -e esp32dev --fail-on-defect high --skip-packages
+
+  build:
+    name: Build firmware (esp32dev)
+    runs-on: ubuntu-latest
+    needs: format-and-lint
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install platformio
+
+      - name: Build ESP32 firmware (esp32dev)
+        run: |
+          # Adjust path/env if you add more board projects
+          pio run -d boards/esp_wroom_32 -e esp32dev
