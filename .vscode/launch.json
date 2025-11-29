@@ -1,0 +1,32 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "PIO Debug (esp32dev)",
+      "type": "platformio-debug",
+      "request": "launch",
+      "internalConsoleOptions": "openOnSessionStart",
+      "cwd": "${workspaceFolder}",
+      "program": "${workspaceFolder}/boards/esp_wroom_32/.pio/build/esp32dev/firmware.elf",
+      "env": {},
+      "args": []
+    },
+    {
+      "name": "ESP32 GDB (manual attach)",
+      "type": "cppdbg",
+      "request": "launch",
+      "MIMode": "gdb",
+      "miDebuggerPath": "xtensa-esp32-elf-gdb",
+      "program": "${workspaceFolder}/boards/esp_wroom_32/.pio/build/esp32dev/firmware.elf",
+      "cwd": "${workspaceFolder}",
+      "externalConsole": false,
+      "setupCommands": [
+        {
+          "text": "target remote localhost:3333",
+          "description": "Connect to OpenOCD on localhost:3333",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}

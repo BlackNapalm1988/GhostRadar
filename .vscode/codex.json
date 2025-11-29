@@ -1,0 +1,37 @@
+{
+  "project": "GhostRadar",
+  "description": "VS Code Codex configuration for the GhostRadar multi-board ESP32 firmware project.",
+  "agentsConfigFile": "ghostradar_agents.json",
+  "tasksFile": "ghostradar_codex_tasks.md",
+  "defaultAgent": "ghost_fullstack_feature_engineer",
+  "presets": [
+    {
+      "id": "include-audit-shared",
+      "title": "Run include audit on shared core",
+      "agent": "ghost_include_auditor",
+      "scope": "workspace",
+      "prompt": "Scan all files under `shared/include` and `shared/src` for include and header discipline issues. Identify circular includes, unnecessary includes, headers that fail to include what they use, and any shared files that include board-specific headers. Provide: (1) a high-level summary, (2) file-by-file findings, and (3) a concrete refactor checklist I can follow. Do not modify any files, only report findings."
+    },
+    {
+      "id": "add-new-board",
+      "title": "Add new board from esp_wroom_32 template",
+      "agent": "ghost_board_bringup_engineer",
+      "scope": "workspace",
+      "prompt": "Using `boards/esp_wroom_32` as a reference, create a new board under `boards/<NEW_BOARD_NAME>`. Copy the existing structure (platformio.ini, src/main.cpp, src/BoardConfig.cpp, include/BoardPins.h, data/). Update platformio.ini with the correct PlatformIO board ID, and adjust BoardPins.h and BoardConfig.cpp wiring for the new hardware (display, touch, SD, sensors as described by the user). Keep all hardware-specific details inside the new board folder and do not modify shared code."
+    },
+    {
+      "id": "refactor-shared-core",
+      "title": "Refactor shared core subsystem",
+      "agent": "ghost_shared_core_engineer",
+      "scope": "workspace",
+      "prompt": "Refactor the shared core in `shared/src` and `shared/include` to improve structure, readability, and header discipline for the subsystem specified by the user (e.g. Display, Sensors, Settings). Keep the shared code fully board-agnostic and rely only on BoardConfig.h for hardware abstraction. Output diff-style patches."
+    },
+    {
+      "id": "implement-feature",
+      "title": "Implement cross-cutting feature",
+      "agent": "ghost_fullstack_feature_engineer",
+      "scope": "workspace",
+      "prompt": "Implement a new feature for GhostRadar that may require changes in shared core, one or more boards, PlatformIO configs, and documentation. First, analyze the repository structure, then propose a brief plan. Apply changes in small, coherent steps and output diff-style patches. Respect the rules that shared code must remain board-agnostic and board wiring stays in boards/<board> only."
+    }
+  ]
+}

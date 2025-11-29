@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "platformio.platformio-ide",
+    "ms-vscode.cpptools",
+    "ms-vscode.cmake-tools",
+    "ms-python.python",
+    "ms-python.vscode-pylance"
+  ],
+  "unwantedRecommendations": [
+    "vscode.typescript-language-features"
+  ]
+}
